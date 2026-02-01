@@ -201,6 +201,7 @@
             color: var(--text-color);
         }
 
+        /* 按鈕樣式 (修正手機 Hover 問題) */
         .btn {
             background: rgba(0,0,0,0.5);
             color: var(--primary-color);
@@ -215,12 +216,39 @@
             width: 100%;
             max-width: 250px;
             border-radius: 4px;
+            /* 避免手機點擊後的藍色框框 */
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
         }
 
-        .btn:hover {
+        .btn-secondary {
+            color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        /* 僅在支援滑鼠 hover 的裝置上顯示懸停效果 */
+        @media (hover: hover) {
+            .btn:hover {
+                background: var(--primary-color);
+                color: var(--btn-hover-text);
+                box-shadow: 0 0 20px var(--shadow-color);
+            }
+            .btn-secondary:hover {
+                background: var(--secondary-color);
+                color: #fff;
+                box-shadow: 0 0 20px rgba(176, 38, 255, 0.4);
+            }
+        }
+
+        /* 手機按壓時的效果 */
+        .btn:active {
             background: var(--primary-color);
             color: var(--btn-hover-text);
-            box-shadow: 0 0 20px var(--shadow-color);
+            transform: scale(0.98);
+        }
+        .btn-secondary:active {
+            background: var(--secondary-color);
+            color: #fff;
         }
         
         /* 隱私權部分樣式 - 低調版 */
@@ -295,17 +323,6 @@
             color: #666;
             margin-bottom: 10px;
             font-style: italic;
-        }
-
-        .btn-secondary {
-            color: var(--secondary-color);
-            border-color: var(--secondary-color);
-        }
-
-        .btn-secondary:hover {
-            background: var(--secondary-color);
-            color: #fff;
-            box-shadow: 0 0 20px rgba(176, 38, 255, 0.4);
         }
 
         .screen {
@@ -489,22 +506,35 @@
             background: var(--primary-color);
             width: 0%;
             box-shadow: 0 0 10px var(--primary-color);
-            transition: width 0.1s linear; /* 讓JS控制忽快忽慢時順暢 */
+            transition: width 0.1s linear;
+        }
+
+        /* === 權限視窗遮罩層 === */
+        #fake-perm-overlay {
+            position: fixed;
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background: rgba(255, 255, 255, 0.15); /* 微微反白的效果 */
+            backdrop-filter: blur(2px); /* 讓背景模糊一點 */
+            z-index: 5000; /* 高於內容，低於駭客驚嚇 */
+            display: none; /* 預設隱藏 */
+            justify-content: center;
+            align-items: center;
         }
         
         /* 仿真權限視窗 */
         .fake-permission-modal {
             background: #fff;
             color: #333;
-            width: 300px;
+            width: 300px; /* 固定寬度 */
             border-radius: 12px;
             padding: 0;
-            margin: 20px auto;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             text-align: left;
             position: relative;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; /* 仿系統字體 */
-            display: none; /* 預設隱藏 */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             animation: popIn 0.3s ease-out;
         }
         
@@ -536,9 +566,10 @@
             padding: 15px 0;
             font-size: 1rem;
             font-weight: bold;
-            color: #007aff; /* iOS Blue */
+            color: #007aff;
             cursor: pointer;
             transition: background 0.2s;
+            -webkit-tap-highlight-color: transparent; /* 移除手機點擊藍框 */
         }
 
         .perm-btn:first-child {
@@ -546,13 +577,19 @@
             color: #007aff; 
         }
         
-        .perm-btn:hover {
-            background: #f5f5f5;
-            box-shadow: none; /* 覆蓋全域 btn hover */
-            color: #005ecb;
+        /* 針對桌機才有 hover 效果 */
+        @media (hover: hover) {
+            .perm-btn:hover {
+                background: #f5f5f5;
+                box-shadow: none; 
+                color: #005ecb;
+            }
         }
         
-        /* 讓假視窗內的按鈕不要吃到外面的 .btn 樣式 */
+        /* 手機按壓時效果 */
+        .perm-btn:active {
+            background: #eee;
+        }
         
         .virus-alert-text {
             color: var(--danger-color);
@@ -560,7 +597,7 @@
             font-weight: bold;
             margin-bottom: 20px;
             animation: flashRed 1s infinite;
-            display: none; /* 掃描完才顯示 */
+            display: none; 
         }
 
         @keyframes popIn {
@@ -678,17 +715,19 @@
             
             <p id="scan-status-text">正在分析系統檔案...</p>
 
-            <!-- 仿真權限要求視窗 -->
-            <div id="fake-perm-modal" class="fake-permission-modal">
-                <div class="perm-header">
-                    "SystemSecurity" 想要使用您的相機
-                </div>
-                <div class="perm-body">
-                    此網站需要相機權限以掃描實體病毒與清除。
-                </div>
-                <div class="perm-actions">
-                    <button class="perm-btn" onclick="finishScanGame(false)">封鎖</button>
-                    <button class="perm-btn" onclick="finishScanGame(true)">允許</button>
+            <!-- 仿真權限要求視窗 (包裹在全螢幕遮罩中) -->
+            <div id="fake-perm-overlay">
+                <div class="fake-permission-modal">
+                    <div class="perm-header">
+                        "SystemSecurity" 想要使用您的相機
+                    </div>
+                    <div class="perm-body">
+                        此網站需要相機權限以掃描實體病毒與生物特徵。
+                    </div>
+                    <div class="perm-actions">
+                        <button class="perm-btn" onclick="finishScanGame(false)">封鎖</button>
+                        <button class="perm-btn" onclick="finishScanGame(true)">允許</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -801,7 +840,6 @@
         /**
          * 遊戲邏輯腳本
          */
-        // 初始化音效 (需準備 horrible.mp3)
         const scareAudio = new Audio('horrible.mp3');
         scareAudio.volume = 1.0; 
 
@@ -810,16 +848,16 @@
             {
                 text: "是否仔細閱讀隱私權條款？",
                 logic: "special", // 特殊邏輯
-                explanation: "魔鬼藏在細節裡。許多惡意條款（如出售個資、存取通訊錄）常藏在長篇大論中。直接勾選同意等於將數位靈魂拱手讓人。",
+                explanation: "魔鬼藏在細節裡。許多惡意條款（如出售個資、存取通訊錄）常藏在長篇大論中。直接勾選同意等於將數位靈魂拱手讓人。恭喜你發現了隱藏選項！",
             },
             { 
-                text: "常用密碼是否超過 8 碼？", 
+                text: "使用的密碼是否超過 8 碼？", 
                 logic: "checked",
                 explanation: "長度是密碼強度的關鍵。建議使用複雜度高且長度足夠的密碼。",
                 image: "password.png" 
             },
             { 
-                text: "常用密碼是否包含個人資訊？（如生日、手機、姓名）", 
+                text: "使用的密碼是否包含個人資訊？（如生日、手機、姓名）", 
                 logic: "unchecked",
                 explanation: "若駭客成功盜取你的個人資訊，那你的密碼被破解的風險提高。避免將公開資訊設為密碼。"
             },
@@ -923,32 +961,26 @@
 
         // Q4 模擬遊戲邏輯
         function startScanGame() {
-            // 隱藏一般問答介面
             document.getElementById('quiz-screen').classList.remove('active');
-            // 顯示掃描模擬介面
             document.getElementById('scan-simulation-screen').classList.add('active');
             
-            // 更新上方進度條 (讓使用者知道還在測驗中)
             const totalQuizQ = questions.length - 1;
             const currentProgress = currentQuestionIndex - 1;
             const progressPercent = (currentProgress / totalQuizQ) * 100;
             document.getElementById('scan-quiz-bar').style.width = `${progressPercent}%`;
 
-            // 重置狀態
             document.getElementById('virus-alert').style.display = 'none';
-            document.getElementById('fake-perm-modal').style.display = 'none';
+            document.getElementById('fake-perm-overlay').style.display = 'none';
             document.getElementById('scan-bar-wrapper').style.display = 'block';
             document.getElementById('scan-status-text').innerText = "正在分析系統檔案...";
             document.getElementById('scan-fake-bar').style.width = '0%';
             
-            // 點點動畫
             let dots = 0;
             const dotInterval = setInterval(() => {
                 dots = (dots + 1) % 4;
                 document.getElementById('scan-dots').innerText = '.'.repeat(dots);
             }, 400);
 
-            // 忽快忽慢的進度條
             let width = 0;
             const runProgress = () => {
                 if (width >= 100) {
@@ -957,16 +989,14 @@
                     return;
                 }
                 
-                // 隨機增加寬度 (模擬卡頓與快速運算)
                 let jump = Math.random() * 15; 
                 width += jump;
                 if(width > 100) width = 100;
                 
                 document.getElementById('scan-fake-bar').style.width = width + '%';
                 
-                // 隨機延遲下次更新
                 let delay = Math.random() * 500;
-                if(width > 80) delay += 400; // 最後跑慢一點增加緊張感
+                if(width > 80) delay += 400;
                 
                 setTimeout(runProgress, delay);
             };
@@ -978,40 +1008,35 @@
             document.getElementById('scan-status-text').innerText = "掃描完成";
             document.getElementById('scan-bar-wrapper').style.display = 'none';
             
-            // 顯示紅字警告
             const alertBox = document.getElementById('virus-alert');
             alertBox.style.display = 'block';
 
-            // 兩秒後彈出權限視窗
             setTimeout(() => {
-                const modal = document.getElementById('fake-perm-modal');
-                modal.style.display = 'block';
+                // 顯示遮罩層，裡面包含權限框
+                const overlay = document.getElementById('fake-perm-overlay');
+                overlay.style.display = 'flex';
             }, 2000);
         }
 
         function finishScanGame(userAllowed) {
-            // 邏輯: userAllowed = true (點擊允許) -> 這是錯誤的行為 -> 0分 + 驚嚇
-            //       userAllowed = false (點擊封鎖) -> 這是正確的行為 -> 10分
-            
             let gotPoint = false;
             
             if (userAllowed) {
-                // 點了允許 -> 觸發駭客驚嚇
                 triggerScare();
                 gotPoint = false;
             } else {
-                // 點了封鎖 -> 正確
                 score += 10;
                 gotPoint = true;
             }
 
             userResults[currentQuestionIndex] = gotPoint;
             
-            // 切換回下一題
             currentQuestionIndex++;
+            
+            // 關閉遮罩和掃描頁
+            document.getElementById('fake-perm-overlay').style.display = 'none';
             document.getElementById('scan-simulation-screen').classList.remove('active');
             
-            // 如果剛被嚇，多等一下再顯示下一題
             const delay = userAllowed ? 1100 : 0;
             
             setTimeout(() => {
@@ -1019,12 +1044,11 @@
                     document.getElementById('quiz-screen').classList.add('active');
                     showQuestion();
                 } else {
-                    document.getElementById('quiz-screen').classList.add('active'); // showResult預設是從quiz-screen切換
+                    document.getElementById('quiz-screen').classList.add('active');
                     showResult();
                 }
             }, delay);
         }
-
 
         // 觸發驚嚇效果 + 音效
         function triggerScare() {
@@ -1048,7 +1072,6 @@
                 console.log("Audio Error:", error);
             }
 
-            // 1秒後自動移除
             setTimeout(() => {
                 scareEl.classList.remove('scare-active');
                 flashEl.classList.remove('flash-active');
@@ -1056,6 +1079,11 @@
         }
 
         function handleAnswer(userClickedYes) {
+            // 強制移除按鈕焦點，解決手機點擊後顏色殘留問題
+            if (document.activeElement) {
+                document.activeElement.blur();
+            }
+
             const currentQ = questions[currentQuestionIndex];
             let gotPoint = false;
 
@@ -1077,9 +1105,6 @@
             const delay = gotPoint ? 0 : 1100;
 
             setTimeout(() => {
-                // 檢查是否下一題是第 4 題 (模擬裝置掃描)
-                // 注意：currentQuestionIndex 已經加 1 了
-                // 如果現在 currentQuestionIndex 是 4，代表該顯示第 4 題
                 if (currentQuestionIndex === 4) {
                     startScanGame();
                 } else if (currentQuestionIndex < questions.length) {
@@ -1092,7 +1117,7 @@
 
         function showResult() {
             document.getElementById('quiz-screen').classList.remove('active');
-            document.getElementById('scan-simulation-screen').classList.remove('active'); // 確保掃描頁關閉
+            document.getElementById('scan-simulation-screen').classList.remove('active');
             document.getElementById('result-screen').classList.add('active');
             window.scrollTo(0, 0);
 
