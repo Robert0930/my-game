@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>數位靈魂測驗 - 駭客版</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+TC:wght@400;700&display=swap');
+
+        /* 定義變數 - 暗黑模式 (預設) */
+        :root {
+            --bg-color: #000000;
+            --panel-bg: rgba(0, 0, 0, 0.9); /* 加深背景不透明度以凸顯文字 */
+            --text-color: #e0e0e0;
+            --primary-color: #00ff41; /* 駭客綠 */
+            --secondary-color: #b026ff; /* 賽博紫 */
+            --danger-color: #ff003c; /* 警告紅 */
+            --border-color: #00ff41;
+            --shadow-color: rgba(0, 255, 65, 0.3);
+            --btn-hover-text: #000;
+        }
+
+        /* 明亮模式變數 */
+        body.light-mode {
+            --bg-color: #f0f2f5;
+            --panel-bg: rgba(255, 255, 255, 0.95);
+            --text-color: #333333;
+            --primary-color: #008f24;
+            --secondary-color: #7a00cc;
+            --danger-color: #d6002a;
+            --border-color: #008f24;
+            --shadow-color: rgba(0, 143, 36, 0.2);
+            --btn-hover-text: #fff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Share Tech Mono', 'Noto Sans TC', monospace;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            overflow-x: hidden;
+            position: relative;
+            padding: 20px 0;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Matrix Canvas 背景 */
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0; /* 最底層 */
+            opacity: 0.8;
+        }
+
+        /* CRT 掃描線特效 (疊在 Canvas 之上) */
+        body:not(.light-mode)::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 1; /* 比 Canvas 高 */
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* 駭客驚嚇層 */
+        #hacker-scare {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('hacker.png'); /* 請確保有這張圖 */
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
+            z-index: 9999; /* 最頂層 */
+            opacity: 0;
+            pointer-events: none;
+            display: none; /* 預設不顯示 */
+            mix-blend-mode: hard-light; /* 讓圖片與背景融合更像雜訊 */
+        }
+
+        /* 驚嚇動畫 Class */
+        .scare-active {
+            display: block !important;
+            animation: glitch-anim 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+        }
+
+        @keyframes glitch-anim {
+            0% { opacity: 0; transform: translate(0); filter: hue-rotate(0deg); }
+            20% { opacity: 0.8; transform: translate(-10px, 10px); filter: hue-rotate(90deg) invert(1); }
+            40% { opacity: 1; transform: translate(10px, -10px); filter: contrast(2); }
+            60% { opacity: 0.8; transform: translate(-5px, 5px); }
+            80% { opacity: 0.2; transform: translate(5px, -5px); }
+            100% { opacity: 0; transform: translate(0); }
+        }
+
+        /* 紅色閃爍覆蓋層 (配合驚嚇) */
+        #red-flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 0, 0, 0.3);
+            z-index: 9998;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .flash-active {
+            animation: flash-anim 0.3s ease-out;
+        }
+        @keyframes flash-anim {
+            0% { opacity: 0.8; }
+            100% { opacity: 0; }
+        }
+
+        /* 主題切換按鈕 */
+        #theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--panel-bg);
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 10px 15px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+            box-shadow: 0 0 10px var(--shadow-color);
+        }
+        
+        #theme-toggle:hover {
+            transform: scale(1.1);
+            background: var(--primary-color);
+            color: var(--btn-hover-text);
+        }
+
+        .container {
+            width: 95%;
+            max-width: 700px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 15px var(--shadow-color);
+            padding: 30px;
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            border-radius: 8px;
+            margin-top: 5vh;
+            margin-bottom: 5vh;
+            transition: background 0.3s, border 0.3s;
+            backdrop-filter: blur(5px); /* 毛玻璃效果 */
+        }
+
+        h1, h2, h3 {
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            text-shadow: 0 0 8px var(--shadow-color);
+            font-size: 2rem;
+            line-height: 1.4;
+        }
+
+        h2 { font-size: 1.5rem; color: var(--text-color); }
+        
+        p {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            line-height: 1.8;
+            color: var(--text-color);
+        }
+
+        .btn {
+            background: rgba(0,0,0,0.5);
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            margin: 10px;
+            text-shadow: 0 0 2px var(--shadow-color);
+            width: 100%;
+            max-width: 250px;
+            border-radius: 4px;
+        }
+
+        .btn:hover {
+            background: var(--primary-color);
+            color: var(--btn-hover-text);
+            box-shadow: 0 0 20px var(--shadow-color);
+        }
+
+        .btn-secondary {
+            color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--secondary-color);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(176, 38, 255, 0.4);
+        }
+
+        .screen {
+            display: none;
+            width: 100%;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        .active {
+            display: block;
+        }
+
+        .progress-container {
+            width: 100%;
+            background-color: #444;
+            height: 6px;
+            margin-bottom: 30px;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        body.light-mode .progress-container {
+            background-color: #ddd;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .result-score {
+            font-size: 5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            text-shadow: 0 0 20px var(--shadow-color);
+            margin: 20px 0;
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .result-desc {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            border-bottom: 1px dashed var(--text-color);
+            padding-bottom: 30px;
+        }
+
+        .explanation-container, .tools-container {
+            text-align: left;
+            margin-top: 30px;
+        }
+
+        .section-header {
+            text-align: center;
+            color: var(--secondary-color);
+            border: 1px solid var(--secondary-color);
+            padding: 10px 20px;
+            margin: 0 auto 30px auto;
+            display: table;
+            font-size: 1.5rem;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(176, 38, 255, 0.2);
+            background: rgba(0,0,0,0.5);
+        }
+
+        .exp-item {
+            background: rgba(128, 128, 128, 0.1);
+            border-left: 5px solid var(--primary-color);
+            margin-bottom: 25px;
+            padding: 20px;
+            border-radius: 0 5px 5px 0;
+            transition: transform 0.2s;
+        }
+
+        .exp-item.wrong-item {
+            border-left-color: var(--danger-color);
+            background: rgba(255, 0, 60, 0.1);
+        }
+
+        .exp-item:hover {
+            transform: translateX(5px);
+        }
+
+        .exp-q {
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .exp-item.wrong-item .exp-q {
+            color: var(--danger-color);
+        }
+        
+        .wrong-tag {
+            font-size: 0.8rem;
+            background: var(--danger-color);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 10px;
+            vertical-align: middle;
+            display: none;
+        }
+        
+        .exp-item.wrong-item .wrong-tag {
+            display: inline-block;
+        }
+
+        .exp-text {
+            font-size: 0.95rem;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .exp-img {
+            max-width: 100%;
+            border: 2px solid var(--text-color);
+            margin-top: 15px;
+            opacity: 0.9;
+        }
+
+        .tool-item {
+            border: 1px solid var(--text-color);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            background: rgba(0,0,0,0.3);
+        }
+        
+        body.light-mode .tool-item {
+            background: rgba(255,255,255,0.5);
+            border-color: #ccc;
+        }
+
+        .tool-link {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 10px;
+            word-break: break-all;
+        }
+
+        .tool-link:hover {
+            text-decoration: underline;
+        }
+
+        .scroll-hint {
+            margin-top: -20px;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-10px);}
+            60% {transform: translateY(-5px);}
+        }
+
+        /* RWD */
+        @media (max-width: 600px) {
+            .container { margin-top: 2vh; padding: 20px; }
+            h1 { font-size: 1.5rem; }
+            .result-score { font-size: 3.5rem; }
+            #theme-toggle { top: 10px; right: 10px; padding: 8px 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 背景特效 Canvas -->
+    <canvas id="matrix-canvas"></canvas>
+
+    <!-- 駭客驚嚇層 -->
+    <div id="hacker-scare"></div>
+    <div id="red-flash"></div>
+
+    <!-- 日夜模式切換按鈕 -->
+    <button id="theme-toggle" onclick="toggleTheme()">
+        <span id="theme-icon">🌙</span>
+    </button>
+
+    <div class="container">
+        <!-- 1. 開始頁面 -->
+        <div id="start-screen" class="screen active">
+            <h1>在這個數位世界裡，<br>你的靈魂有多『赤裸』？</h1>
+            <p>一切資料都有代價。<br>你準備好面對真相了嗎？</p>
+            <button class="btn" onclick="startGame()">開始掃描</button>
+        </div>
+
+        <!-- 2. 測驗頁面 -->
+        <div id="quiz-screen" class="screen">
+            <div class="progress-container">
+                <div id="progress-bar" class="progress-bar"></div>
+            </div>
+            <h2 id="question-text" style="min-height: 80px; display:flex; align-items:center; justify-content:center;">題目載入中...</h2>
+            <div style="margin-top: 40px;">
+                <button class="btn" onclick="handleAnswer(true)">是 / 有</button>
+                <button class="btn btn-secondary" onclick="handleAnswer(false)">否 / 沒有</button>
+            </div>
+            <div style="margin-top: 30px; font-size: 0.8rem; opacity: 0.7;">
+                *點擊選項即自動進入下一題
+            </div>
+        </div>
+
+        <!-- 3. 結果頁面 -->
+        <div id="result-screen" class="screen">
+            <h2>掃描完成</h2>
+            <div id="final-score" class="result-score">0</div>
+            
+            <h3 id="result-title" class="result-title">稱號載入中...</h3>
+            <p id="result-comment" class="result-desc">評語載入中...</p>
+
+            <div class="scroll-hint">▼ 下滑查看解析與推薦 ▼</div>
+
+            <!-- 解析與教學區塊 -->
+            <div class="explanation-container">
+                <div class="section-header">資安小教學</div>
+                <div id="explanation-list">
+                    <!-- JS 自動生成內容 -->
+                </div>
+            </div>
+
+            <!-- 工具推薦區塊 -->
+            <div class="tools-container">
+                <div class="section-header">【工具推薦】</div>
+                
+                <div class="tool-item">
+                    <a href="https://www.virustotal.com/gui/home/upload" target="_blank" class="tool-link">
+                        🛡️ VirusTotal
+                    </a>
+                    <p style="margin-bottom:0; font-size: 0.95rem;">
+                        免費的線上安全檢測平台，專門用於掃描可疑文件、網址、IP 位址和網域。
+                        <br><br>
+                        <strong>特點：</strong>整合了超過 50-70 多款全球知名的防毒引擎，提供綜合性的安全報告。
+                    </p>
+                </div>
+
+                <div class="tool-item">
+                    <a href="https://haveibeenpwned.com/Passwords" target="_blank" class="tool-link">
+                        🔐 Have I Been Pwned
+                    </a>
+                    <p style="margin-bottom:0; font-size: 0.95rem;">
+                        免費的密碼檢測網站，提供使用者檢測密碼是否曾經在外洩事件中流出，導致資料風險。
+                    </p>
+                </div>
+            </div>
+
+            <button class="btn" onclick="location.reload()" style="margin-top: 40px;">重新測驗</button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * Matrix 背景特效腳本
+         */
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // 設定 Canvas 大小
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Matrix 字元 (片假名 + 拉丁字母 + 數字)
+        const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
+        const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const nums = '0123456789';
+        const alphabet = katakana + latin + nums;
+
+        const fontSize = 16;
+        let columns = Math.floor(canvas.width / fontSize);
+        // 紀錄每行落下到哪個 Y 座標 (初始化為 1)
+        let drops = [];
+        for(let x = 0; x < columns; x++) {
+            drops[x] = 1;
+        }
+
+        // 繪製函式
+        function drawMatrix() {
+            // 每次繪製時加上半透明黑色遮罩，製造殘影效果
+            // 如果是亮色模式，遮罩改為白色
+            const isLight = document.body.classList.contains('light-mode');
+            
+            if (isLight) {
+                ctx.fillStyle = 'rgba(240, 242, 245, 0.1)'; // 淡色背景殘影
+            } else {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)'; // 黑色背景殘影
+            }
+            
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 設定文字顏色和字型
+            if (isLight) {
+                ctx.fillStyle = '#008f24'; // 亮色模式用深綠色字
+            } else {
+                ctx.fillStyle = '#0F0'; // 暗黑模式用螢光綠字
+            }
+            
+            ctx.font = fontSize + 'px monospace';
+
+            for(let i = 0; i < drops.length; i++) {
+                // 隨機選一個字
+                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                
+                // 畫在 Canvas 上
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                // 隨機重置回到頂部，或繼續落下
+                if(drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        // 啟動 Matrix 動畫循環
+        setInterval(drawMatrix, 30);
+
+
+        /**
+         * 遊戲邏輯腳本
+         */
+        const questions = [
+            { 
+                text: "密碼是否超過 8 碼？", 
+                logic: "checked",
+                explanation: "長度是密碼強度的關鍵。建議使用複雜度高且長度足夠的密碼。",
+                image: "password.png" 
+            },
+            { 
+                text: "密碼是否包含個人資訊？（如生日、手機、姓名）", 
+                logic: "unchecked",
+                explanation: "若駭客成功盜取你的個人資訊，那你的密碼被破解的風險提高。避免將公開資訊設為密碼。"
+            },
+            { 
+                text: "你會連公共 Wifi 嗎？（如星巴克、圖書館）", 
+                logic: "unchecked",
+                explanation: "你的瀏覽資訊、個人資訊可能透過公共網路被有心人士利用、竊取。建議使用 VPN 或自己的行動數據。"
+            },
+            { 
+                text: "手機裡是否有：抖音、小紅書、美圖秀秀、微信、微博？", 
+                logic: "unchecked",
+                explanation: "部分應用程式（特別是來自特定地區）會要求過多權限，你的資料可能會被不斷回傳至境外伺服器，隱私風險極高。"
+            },
+            { 
+                text: "看到別人傳的連結會直接點開嗎？", 
+                logic: "unchecked",
+                explanation: "直接點擊連結提高裝置中毒機率，或直接誤入釣魚網站。請確認來源，或使用官方 APP 進入。"
+            },
+            { 
+                text: "知道註冊網站時有同意「蒐集資料」嗎？", 
+                logic: "checked",
+                explanation: "「我不是只搜尋包包，為什麼IG、FB就不斷跳出包包廣告？」這些社群平台在註冊時，就有一頁詢問是否同意資料被公司使用。"
+            },
+            { 
+                text: "知道提供的資料會被用來推播廣告嗎？", 
+                logic: "checked",
+                explanation: "是不是有剛講要吃麵，下一秒刷新臉書時就跳出麵店廣告？個人資料（如瀏覽紀錄、搜尋內容）常被網站透過 Cookie 與廣告商追蹤。"
+            },
+            { 
+                text: "知道已提供的個人資訊可要求官方刪除嗎？", 
+                logic: "checked",
+                explanation: "根據《個人資料保護法》，民眾有權要求企業或機構刪除已提供的個人資料（如終止服務時），包括要求查閱、停止處理或刪除。"
+            },
+            { 
+                text: "知道在公司、學校使用無痕視窗還是會留下紀錄嗎？", 
+                logic: "checked",
+                explanation: "無痕模式只有「對自己無痕」，無法保護你的瀏覽行為不被網路管理員看到。公司網路設備通常可以追蹤並保留所有紀錄。"
+            },
+            { 
+                text: "你會區分功能使用不同帳號嗎？", 
+                logic: "checked",
+                explanation: "區分工作與個人帳號是高資安意識的表現，能有效防止單一帳號洩漏後，導致個人的所有行蹤與偏好被系統全面掌握。"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let userResults = []; 
+
+        // 日夜模式切換
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const icon = document.getElementById('theme-icon');
+            if (document.body.classList.contains('light-mode')) {
+                icon.innerText = "☀️";
+            } else {
+                icon.innerText = "🌙";
+            }
+        }
+
+        function startGame() {
+            window.scrollTo(0, 0);
+            document.getElementById('start-screen').classList.remove('active');
+            document.getElementById('quiz-screen').classList.add('active');
+            currentQuestionIndex = 0;
+            score = 0;
+            userResults = [];
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const progressPercent = ((currentQuestionIndex) / questions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+
+            const currentQ = questions[currentQuestionIndex];
+            document.getElementById('question-text').innerText = `${currentQuestionIndex + 1}. ${currentQ.text}`;
+        }
+
+        // 觸發驚嚇效果
+        function triggerScare() {
+            const scareEl = document.getElementById('hacker-scare');
+            const flashEl = document.getElementById('red-flash');
+            
+            // 移除 class 以便重新觸發動畫 (如果連續答錯)
+            scareEl.classList.remove('scare-active');
+            flashEl.classList.remove('flash-active');
+            
+            // 強制重繪 (Reflow)
+            void scareEl.offsetWidth;
+            
+            // 加入動畫 Class
+            scareEl.classList.add('scare-active');
+            flashEl.classList.add('flash-active');
+
+            // 0.5秒後自動移除，避免擋住畫面太久
+            setTimeout(() => {
+                scareEl.classList.remove('scare-active');
+                flashEl.classList.remove('flash-active');
+            }, 500);
+        }
+
+        function handleAnswer(userClickedYes) {
+            const currentQ = questions[currentQuestionIndex];
+            let gotPoint = false;
+
+            // 計分邏輯
+            if (currentQ.logic === 'checked') {
+                if (userClickedYes) gotPoint = true;
+            } else if (currentQ.logic === 'unchecked') {
+                if (!userClickedYes) gotPoint = true;
+            }
+
+            if (gotPoint) {
+                score += 10;
+            } else {
+                // 如果答錯 (沒拿到分)，觸發駭客驚嚇
+                triggerScare();
+            }
+
+            userResults.push(gotPoint); 
+            currentQuestionIndex++;
+
+            // 延遲一點點跳轉，讓嚇人效果能被看到
+            const delay = gotPoint ? 0 : 400;
+
+            setTimeout(() => {
+                if (currentQuestionIndex < questions.length) {
+                    showQuestion();
+                } else {
+                    showResult();
+                }
+            }, delay);
+        }
+
+        function showResult() {
+            document.getElementById('quiz-screen').classList.remove('active');
+            document.getElementById('result-screen').classList.add('active');
+            window.scrollTo(0, 0);
+
+            const scoreEl = document.getElementById('final-score');
+            let tempScore = 0;
+            const interval = setInterval(() => {
+                scoreEl.innerText = tempScore;
+                if (tempScore >= score) {
+                    clearInterval(interval);
+                    analyzeResult();
+                }
+                tempScore++;
+            }, 20);
+
+            if (score === 0) {
+                scoreEl.innerText = 0;
+                analyzeResult();
+            }
+
+            renderExplanations();
+        }
+
+        function analyzeResult() {
+            const titleEl = document.getElementById('result-title');
+            const commentEl = document.getElementById('result-comment');
+            let title = "";
+            let comment = "";
+            let color = "";
+
+            if (score >= 0 && score < 30) {
+                title = "資安見習者";
+                comment = "你的帳號可能已經被盜了！請立刻展開行動修補漏洞。";
+                color = "var(--danger-color)"; 
+            } else if (score >= 30 && score < 60) {
+                title = "資安入門者";
+                comment = "你的資訊可能已經被賣給廣告商了！小心，你正在裸奔的邊緣。";
+                color = "#e6e600"; 
+            } else {
+                title = "資安資優生";
+                comment = "駭客看到你都覺得頭痛！你的防禦固若金湯，請繼續保持。";
+                color = "var(--primary-color)"; 
+            }
+
+            titleEl.innerText = title;
+            titleEl.style.color = color;
+            commentEl.innerText = comment;
+        }
+
+        function renderExplanations() {
+            const list = document.getElementById('explanation-list');
+            list.innerHTML = ""; 
+
+            questions.forEach((q, index) => {
+                const item = document.createElement('div');
+                const isCorrect = userResults[index];
+                
+                item.className = isCorrect ? 'exp-item' : 'exp-item wrong-item';
+                
+                let imgHtml = "";
+                if (q.image) {
+                    imgHtml = `<img src="${q.image}" alt="示意圖" class="exp-img">`;
+                }
+
+                item.innerHTML = `
+                    <span class="exp-q">
+                        Q${index + 1}: ${q.text}
+                        <span class="wrong-tag">⚠️ 資安漏洞</span>
+                    </span>
+                    <div class="exp-text">
+                        ${q.explanation}
+                        ${imgHtml}
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+    </script>
+</body>
+</html>
