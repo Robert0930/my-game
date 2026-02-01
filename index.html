@@ -10,7 +10,7 @@
         /* 定義變數 - 暗黑模式 (預設) */
         :root {
             --bg-color: #000000;
-            --panel-bg: rgba(0, 0, 0, 0.9); /* 加深背景不透明度以凸顯文字 */
+            --panel-bg: rgba(0, 0, 0, 0.9);
             --text-color: #e0e0e0;
             --primary-color: #00ff41; /* 駭客綠 */
             --secondary-color: #b026ff; /* 賽博紫 */
@@ -60,11 +60,11 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 0; /* 最底層 */
+            z-index: 0;
             opacity: 0.8;
         }
 
-        /* CRT 掃描線特效 (疊在 Canvas 之上) */
+        /* CRT 掃描線特效 */
         body:not(.light-mode)::before {
             content: " ";
             display: block;
@@ -74,7 +74,7 @@
             bottom: 0;
             right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 1; /* 比 Canvas 高 */
+            z-index: 1;
             background-size: 100% 2px, 3px 100%;
             pointer-events: none;
         }
@@ -86,49 +86,57 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: url('hacker.png'); /* 請確保有這張圖 */
+            background-image: url('hacker.png');
             background-position: center;
             background-size: cover;
             background-repeat: no-repeat;
-            z-index: 9999; /* 最頂層 */
+            z-index: 9999;
             opacity: 0;
             pointer-events: none;
-            display: none; /* 預設不顯示 */
-            mix-blend-mode: hard-light; /* 讓圖片與背景融合更像雜訊 */
+            display: none;
+            mix-blend-mode: normal;
         }
 
-        /* 驚嚇動畫 Class */
         .scare-active {
             display: block !important;
-            animation: glitch-anim 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+            animation: glitch-anim 1s steps(5) both;
         }
 
         @keyframes glitch-anim {
-            0% { opacity: 0; transform: translate(0); filter: hue-rotate(0deg); }
-            20% { opacity: 0.8; transform: translate(-10px, 10px); filter: hue-rotate(90deg) invert(1); }
-            40% { opacity: 1; transform: translate(10px, -10px); filter: contrast(2); }
-            60% { opacity: 0.8; transform: translate(-5px, 5px); }
-            80% { opacity: 0.2; transform: translate(5px, -5px); }
+            0% { opacity: 0; transform: translate(0) scale(1); filter: hue-rotate(0deg); }
+            10% { opacity: 1; transform: translate(-10px, 10px) scale(1.1); filter: invert(1); }
+            20% { opacity: 1; transform: translate(10px, -10px); filter: contrast(2); }
+            30% { opacity: 0.8; transform: translate(-15px, 5px); }
+            40% { opacity: 1; transform: translate(15px, -5px) scale(1.2); filter: hue-rotate(90deg); }
+            50% { opacity: 1; transform: translate(-5px, 15px); }
+            60% { opacity: 0.6; transform: translate(5px, -15px); filter: invert(1); }
+            70% { opacity: 1; transform: translate(-20px, 0); }
+            80% { opacity: 1; transform: translate(10px, 10px) scale(1.1); }
+            90% { opacity: 0.8; transform: translate(0, 0); }
             100% { opacity: 0; transform: translate(0); }
         }
 
-        /* 紅色閃爍覆蓋層 (配合驚嚇) */
+        /* 紅色閃爍 */
         #red-flash {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 0, 0, 0.3);
+            background: rgba(255, 0, 0, 0.4);
             z-index: 9998;
             opacity: 0;
             pointer-events: none;
         }
         .flash-active {
-            animation: flash-anim 0.3s ease-out;
+            animation: flash-anim 1s ease-out;
         }
         @keyframes flash-anim {
             0% { opacity: 0.8; }
+            20% { opacity: 0.3; }
+            40% { opacity: 0.8; }
+            60% { opacity: 0.2; }
+            80% { opacity: 0.6; }
             100% { opacity: 0; }
         }
 
@@ -169,7 +177,7 @@
             margin-top: 5vh;
             margin-bottom: 5vh;
             transition: background 0.3s, border 0.3s;
-            backdrop-filter: blur(5px); /* 毛玻璃效果 */
+            backdrop-filter: blur(5px);
         }
 
         h1, h2, h3 {
@@ -213,6 +221,80 @@
             background: var(--primary-color);
             color: var(--btn-hover-text);
             box-shadow: 0 0 20px var(--shadow-color);
+        }
+        
+        /* 隱私權部分樣式 - 低調版 */
+        .privacy-box {
+            border: none;
+            background: transparent;
+            padding: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.9;
+        }
+        
+        .sim-link {
+            color: var(--secondary-color);
+            text-decoration: underline;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .sim-link:hover {
+            color: #fff;
+            text-shadow: 0 0 5px var(--secondary-color);
+        }
+
+        /* 免責聲明小字 */
+        .disclaimer-text {
+            margin-top: 25px;
+            font-size: 0.75rem;
+            color: #777;
+            line-height: 1.5;
+            max-width: 90%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* 隱私權 Modal */
+        #privacy-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: #111;
+            border: 2px solid var(--secondary-color);
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 30px;
+            text-align: left;
+            box-shadow: 0 0 30px rgba(176, 38, 255, 0.3);
+            position: relative;
+        }
+        
+        .modal-text {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #ccc;
+            margin-bottom: 20px;
+        }
+        
+        .modal-small {
+            font-size: 0.7rem;
+            color: #666;
+            margin-bottom: 10px;
+            font-style: italic;
         }
 
         .btn-secondary {
@@ -417,17 +499,46 @@
     <div id="hacker-scare"></div>
     <div id="red-flash"></div>
 
+    <!-- 隱私權條款 Modal -->
+    <div id="privacy-modal">
+        <div class="modal-content">
+            <h2 style="color:var(--primary-color); text-align:center;">隱私權聲明</h2>
+            <div class="modal-small text-center">%本站內容僅供教育與娛樂，不會實際蒐集您的任何個人資料。%</div>
+            <div class="modal-text">
+                我們非常重視您的隱私。數位靈魂測驗（以下簡稱「我們」）致力於保護您的個人資料。本政策旨在清楚說明我們如何蒐集、使用及保護您的資訊。<br><br>
+                1. 我們會記錄您與本服務互動的行為，包括您瀏覽的頁面、點擊的連結、存取時間、停留時間及您在造訪本服務前瀏覽的網站。<br><br>
+                2. 用戶同意本公司有權透過自動化手段（包括但不限於 Cookies、信標、腳本及未來開發之任何追蹤技術）收集用戶的設備指紋、瀏覽歷史、位置數據（精確與模糊）、生物特徵特徵及由此推斷出的行為模式與心理畫像。用戶承認，此類數據收集可能在應用程式未運行或設備處於休眠狀態時發生。<br><br>
+                3. 用戶授予本公司一項全球性、永久且可完全轉讓的許可，允許本公司將上述數據出售、授權、租賃或披露予本公司的「策略合作夥伴」。「策略合作夥伴」定義包括但不限於廣告商、數據經紀商、保險公司及任何本公司單方面認定有商業關聯之實體。
+            </div>
+            <button class="btn btn-secondary" onclick="startGame(true)" style="width:100%; margin:0;">不同意全部</button>
+            <div style="text-align:center; margin-top:10px; font-size:0.8rem; cursor:pointer; text-decoration:underline;" onclick="closePolicy()">[ 返回 ]</div>
+        </div>
+    </div>
+
     <!-- 日夜模式切換按鈕 -->
     <button id="theme-toggle" onclick="toggleTheme()">
         <span id="theme-icon">🌙</span>
     </button>
 
     <div class="container">
-        <!-- 1. 開始頁面 -->
+        <!-- 1. 開始頁面 (隱私權同意介面) -->
         <div id="start-screen" class="screen active">
             <h1>在這個數位世界裡，<br>你的靈魂有多『赤裸』？</h1>
             <p>一切資料都有代價。<br>你準備好面對真相了嗎？</p>
-            <button class="btn" onclick="startGame()">開始掃描</button>
+            
+            <div class="privacy-box">
+                <input type="checkbox" id="agree-chk" style="transform: scale(1.3); margin-right: 10px;">
+                <label for="agree-chk" style="font-size:0.9rem; cursor:pointer; color:#999;">
+                    我已詳細閱讀並同意 <span class="sim-link" onclick="openPolicy(); event.preventDefault();">隱私權聲明</span>
+                </label>
+            </div>
+
+            <button class="btn" onclick="checkStart()">開始掃描</button>
+
+            <!-- 免責聲明 -->
+            <div class="disclaimer-text">
+                  警告：本遊戲包含<strong>閃爍特效</strong>，患有光敏性癲癇或心臟疾病者請勿遊玩。
+            </div>
         </div>
 
         <!-- 2. 測驗頁面 -->
@@ -499,7 +610,6 @@
         const canvas = document.getElementById('matrix-canvas');
         const ctx = canvas.getContext('2d');
 
-        // 設定 Canvas 大小
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -507,7 +617,6 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
-        // Matrix 字元 (片假名 + 拉丁字母 + 數字)
         const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
         const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         const nums = '0123456789';
@@ -515,58 +624,56 @@
 
         const fontSize = 16;
         let columns = Math.floor(canvas.width / fontSize);
-        // 紀錄每行落下到哪個 Y 座標 (初始化為 1)
         let drops = [];
         for(let x = 0; x < columns; x++) {
             drops[x] = 1;
         }
 
-        // 繪製函式
         function drawMatrix() {
-            // 每次繪製時加上半透明黑色遮罩，製造殘影效果
-            // 如果是亮色模式，遮罩改為白色
             const isLight = document.body.classList.contains('light-mode');
-            
             if (isLight) {
-                ctx.fillStyle = 'rgba(240, 242, 245, 0.1)'; // 淡色背景殘影
+                ctx.fillStyle = 'rgba(240, 242, 245, 0.1)'; 
             } else {
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)'; // 黑色背景殘影
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)'; 
             }
             
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 設定文字顏色和字型
             if (isLight) {
-                ctx.fillStyle = '#008f24'; // 亮色模式用深綠色字
+                ctx.fillStyle = '#008f24'; 
             } else {
-                ctx.fillStyle = '#0F0'; // 暗黑模式用螢光綠字
+                ctx.fillStyle = '#0F0'; 
             }
             
             ctx.font = fontSize + 'px monospace';
 
             for(let i = 0; i < drops.length; i++) {
-                // 隨機選一個字
                 const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
-                
-                // 畫在 Canvas 上
                 ctx.fillText(text, i * fontSize, drops[i] * fontSize);
 
-                // 隨機重置回到頂部，或繼續落下
                 if(drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
                     drops[i] = 0;
                 }
                 drops[i]++;
             }
         }
-
-        // 啟動 Matrix 動畫循環
         setInterval(drawMatrix, 30);
 
 
         /**
          * 遊戲邏輯腳本
          */
+        // 初始化音效 (需準備 horrible.mp3)
+        const scareAudio = new Audio('horrible.mp3');
+        scareAudio.volume = 1.0; 
+
+        // 題目資料庫 (index 0 是隱私權檢查)
         const questions = [
+            {
+                text: "是否仔細閱讀隱私權條款？",
+                logic: "special", // 特殊邏輯
+                explanation: "魔鬼藏在細節裡。許多惡意條款（如出售個資、存取通訊錄）常藏在長篇大論中。直接勾選同意等於將數位靈魂拱手讓人。恭喜你發現了隱藏選項！",
+            },
             { 
                 text: "密碼是否超過 8 碼？", 
                 logic: "checked",
@@ -594,11 +701,6 @@
                 explanation: "直接點擊連結提高裝置中毒機率，或直接誤入釣魚網站。請確認來源，或使用官方 APP 進入。"
             },
             { 
-                text: "知道註冊網站時有同意「蒐集資料」嗎？", 
-                logic: "checked",
-                explanation: "「我不是只搜尋包包，為什麼IG、FB就不斷跳出包包廣告？」這些社群平台在註冊時，就有一頁詢問是否同意資料被公司使用。"
-            },
-            { 
                 text: "知道提供的資料會被用來推播廣告嗎？", 
                 logic: "checked",
                 explanation: "是不是有剛講要吃麵，下一秒刷新臉書時就跳出麵店廣告？個人資料（如瀏覽紀錄、搜尋內容）常被網站透過 Cookie 與廣告商追蹤。"
@@ -620,11 +722,26 @@
             }
         ];
 
-        let currentQuestionIndex = 0;
+        let currentQuestionIndex = 1; // 從第 1 題開始 (第 0 題是隱私權)
         let score = 0;
         let userResults = []; 
 
-        // 日夜模式切換
+        function openPolicy() {
+            document.getElementById('privacy-modal').style.display = 'flex';
+        }
+        function closePolicy() {
+            document.getElementById('privacy-modal').style.display = 'none';
+        }
+
+        function checkStart() {
+            const chk = document.getElementById('agree-chk');
+            if (!chk.checked) {
+                alert("請勾選同意隱私權聲明才能繼續 (或者...你可以先讀讀看?)");
+                return;
+            }
+            startGame(false);
+        }
+
         function toggleTheme() {
             document.body.classList.toggle('light-mode');
             const icon = document.getElementById('theme-icon');
@@ -635,52 +752,70 @@
             }
         }
 
-        function startGame() {
+        function startGame(bonus) {
             window.scrollTo(0, 0);
+            closePolicy();
             document.getElementById('start-screen').classList.remove('active');
             document.getElementById('quiz-screen').classList.add('active');
-            currentQuestionIndex = 0;
-            score = 0;
+            
+            currentQuestionIndex = 1; 
             userResults = [];
+            
+            if (bonus) {
+                score = 10;
+                userResults[0] = true; 
+            } else {
+                score = 0;
+                userResults[0] = false; 
+            }
+
             showQuestion();
         }
 
         function showQuestion() {
-            const progressPercent = ((currentQuestionIndex) / questions.length) * 100;
+            const totalQuizQ = questions.length - 1;
+            const currentProgress = currentQuestionIndex - 1;
+            
+            const progressPercent = (currentProgress / totalQuizQ) * 100;
             document.getElementById('progress-bar').style.width = `${progressPercent}%`;
 
             const currentQ = questions[currentQuestionIndex];
-            document.getElementById('question-text').innerText = `${currentQuestionIndex + 1}. ${currentQ.text}`;
+            document.getElementById('question-text').innerText = `${currentQuestionIndex}. ${currentQ.text}`;
         }
 
-        // 觸發驚嚇效果
+        // 觸發驚嚇效果 + 音效
         function triggerScare() {
             const scareEl = document.getElementById('hacker-scare');
             const flashEl = document.getElementById('red-flash');
             
-            // 移除 class 以便重新觸發動畫 (如果連續答錯)
             scareEl.classList.remove('scare-active');
             flashEl.classList.remove('flash-active');
             
-            // 強制重繪 (Reflow)
-            void scareEl.offsetWidth;
+            void scareEl.offsetWidth; 
             
-            // 加入動畫 Class
             scareEl.classList.add('scare-active');
             flashEl.classList.add('flash-active');
 
-            // 0.5秒後自動移除，避免擋住畫面太久
+            try {
+                scareAudio.currentTime = 0; 
+                scareAudio.play().catch(e => {
+                    console.log('Audio play failed:', e);
+                });
+            } catch (error) {
+                console.log("Audio Error:", error);
+            }
+
+            // 1秒後自動移除
             setTimeout(() => {
                 scareEl.classList.remove('scare-active');
                 flashEl.classList.remove('flash-active');
-            }, 500);
+            }, 1000);
         }
 
         function handleAnswer(userClickedYes) {
             const currentQ = questions[currentQuestionIndex];
             let gotPoint = false;
 
-            // 計分邏輯
             if (currentQ.logic === 'checked') {
                 if (userClickedYes) gotPoint = true;
             } else if (currentQ.logic === 'unchecked') {
@@ -690,15 +825,13 @@
             if (gotPoint) {
                 score += 10;
             } else {
-                // 如果答錯 (沒拿到分)，觸發駭客驚嚇
                 triggerScare();
             }
 
-            userResults.push(gotPoint); 
+            userResults[currentQuestionIndex] = gotPoint; 
             currentQuestionIndex++;
 
-            // 延遲一點點跳轉，讓嚇人效果能被看到
-            const delay = gotPoint ? 0 : 400;
+            const delay = gotPoint ? 0 : 1100;
 
             setTimeout(() => {
                 if (currentQuestionIndex < questions.length) {
@@ -774,9 +907,16 @@
                     imgHtml = `<img src="${q.image}" alt="示意圖" class="exp-img">`;
                 }
 
+                let qTitle = "";
+                if (index === 0) {
+                    qTitle = "【隱藏關卡】隱私權聲明陷阱";
+                } else {
+                    qTitle = `Q${index}: ${q.text}`;
+                }
+
                 item.innerHTML = `
                     <span class="exp-q">
-                        Q${index + 1}: ${q.text}
+                        ${qTitle}
                         <span class="wrong-tag">⚠️ 資安漏洞</span>
                     </span>
                     <div class="exp-text">
